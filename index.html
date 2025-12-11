@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Shodan Query - SecOps Report</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Plotly.js -->
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chosen Palette: "Electric Future" (Vibrant Blue/Purple/Teal) -->
+    <!-- Palette Name: Electric Future -->
+    <!-- Hex Codes: Primary #4F46E5 (Indigo), Secondary #9333EA (Purple), Accent #06B6D4 (Cyan), Background #F3F4F6 (Gray 100) -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F3F4F6;
+            color: #1F2937;
+        }
+
+        /* Chart Container Styling - Responsive Boundaries */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px; /* Max width for readability */
+            height: 350px;    /* Base height */
+            max-height: 400px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Adjust height for mobile */
+        @media (max-width: 640px) {
+            .chart-container {
+                height: 280px;
+            }
+        }
+
+        /* Plotly Container Specifics */
+        .plotly-container {
+            width: 100%;
+            height: 400px;
+            max-width: 100%; 
+        }
+
+        /* Custom Scrollbar for a modern look */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #e5e7eb;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4F46E5;
+            border-radius: 4px;
+        }
+        
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Narrative Plan Summary:
+         1. Intro: The necessity of automated monitoring.
+         2. Workflow Logic: How n8n + Shodan works (Flowchart).
+         3. Threat Landscape: Common ports found (Donut Chart).
+         4. Impact Analysis: Trends in incident detection (Line Chart).
+         5. Risk Correlation: 3D view of Asset/Port/Vuln data (Plotly WebGL).
+         6. Conclusion: Summary of benefits.
+    -->
+
+    <!-- Header Section -->
+    <header class="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 text-white py-12 shadow-lg">
+        <div class="container mx-auto px-4 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Weekly Shodan Query</h1>
+            <p class="text-xl md:text-2xl font-light opacity-90 max-w-2xl mx-auto">Automated SecOps Report: Detecting the "Accidents" in Your Infrastructure</p>
+            <div class="mt-8 flex justify-center space-x-4">
+                <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-semibold">n8n Automation</span>
+                <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-semibold">Shodan API</span>
+                <span class="bg-white/20 px-4 py-1 rounded-full text-sm font-semibold">Threat Intel</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Grid -->
+    <main class="container mx-auto px-4 py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8">
+
+        <!-- Section 1: Introduction & The Logic -->
+        <div class="lg:col-span-12">
+            <div class="glass-card rounded-xl shadow-md p-8 border-l-4 border-indigo-600">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4">The Silent Risk of "Accidents"</h2>
+                <p class="text-gray-600 leading-relaxed mb-6">
+                    In modern infrastructure, an "accident" isn't a car crash—it's a developer leaving Port 22 open on a production database, or a test server exposing Port 8080 to the public internet. 
+                    These misconfigurations are the low-hanging fruit for attackers. Manual auditing is slow and error-prone. 
+                    This report visualizes the impact of the <strong>Weekly Shodan Query workflow</strong>, an automated system designed to scan, analyze, and alert on these anomalies before they become breaches.
+                </p>
+                
+                <!-- KPI Stats Row -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-8">
+                    <div class="bg-indigo-50 p-6 rounded-lg text-center border border-indigo-100">
+                        <div class="text-4xl font-bold text-indigo-600">52</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wide mt-2">Weeks Monitored</div>
+                    </div>
+                    <div class="bg-purple-50 p-6 rounded-lg text-center border border-purple-100">
+                        <div class="text-4xl font-bold text-purple-600">147</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wide mt-2">Assets Scanned</div>
+                    </div>
+                    <div class="bg-cyan-50 p-6 rounded-lg text-center border border-cyan-100">
+                        <div class="text-4xl font-bold text-cyan-600">99.9%</div>
+                        <div class="text-sm text-gray-500 uppercase tracking-wide mt-2">Uptime Coverage</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Workflow Visualization (Structured HTML/CSS - NO SVG, NO MERMAID) -->
+        <!-- Goal: Organize / Visualize Process -->
+        <div class="lg:col-span-12">
+            <div class="bg-white rounded-xl shadow-md p-8">
+                <h3 class="text-xl font-bold text-gray-800 mb-6 border-b pb-2">How It Works: The Automation Loop</h3>
+                <p class="text-gray-600 mb-8">
+                    This diagram illustrates the logic flow configured in n8n. It transforms a static list of IP targets into actionable security intelligence through a weekly cycle.
+                </p>
+                
+                <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0 relative overflow-hidden p-4">
+                    <!-- Step 1 -->
+                    <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                        <div class="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center text-2xl mb-3 shadow-sm">
+                            ⏱️
+                        </div>
+                        <div class="bg-indigo-600 text-white py-2 px-4 rounded-lg shadow-lg text-center w-full">
+                            <strong>Trigger</strong>
+                            <div class="text-xs opacity-80">Weekly Schedule</div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:block text-gray-300 text-3xl font-light">&rarr;</div>
+                    <div class="block md:hidden text-gray-300 text-3xl font-light">&darr;</div>
+
+                    <!-- Step 2 -->
+                    <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                        <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center text-2xl mb-3 shadow-sm">
+                            📝
+                        </div>
+                        <div class="bg-purple-600 text-white py-2 px-4 rounded-lg shadow-lg text-center w-full">
+                            <strong>Define Targets</strong>
+                            <div class="text-xs opacity-80">IPs & Expected Ports</div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:block text-gray-300 text-3xl font-light">&rarr;</div>
+                    <div class="block md:hidden text-gray-300 text-3xl font-light">&darr;</div>
+
+                    <!-- Step 3 -->
+                    <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                        <div class="w-16 h-16 bg-cyan-100 rounded-full flex items-center justify-center text-2xl mb-3 shadow-sm">
+                            🔍
+                        </div>
+                        <div class="bg-cyan-600 text-white py-2 px-4 rounded-lg shadow-lg text-center w-full">
+                            <strong>Query Shodan</strong>
+                            <div class="text-xs opacity-80">Check Port Status</div>
+                        </div>
+                    </div>
+
+                    <!-- Arrow -->
+                    <div class="hidden md:block text-gray-300 text-3xl font-light">&rarr;</div>
+                    <div class="block md:hidden text-gray-300 text-3xl font-light">&darr;</div>
+
+                    <!-- Step 4 -->
+                    <div class="flex flex-col items-center z-10 w-full md:w-1/5">
+                        <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-2xl mb-3 shadow-sm">
+                            🚨
+                        </div>
+                        <div class="bg-red-500 text-white py-2 px-4 rounded-lg shadow-lg text-center w-full">
+                            <strong>Alert</strong>
+                            <div class="text-xs opacity-80">Slack / TheHive</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 3: Data Visualization - Common "Accidents" -->
+        <!-- Goal: Inform / Compare -->
+        <!-- Chart Type: Donut Chart (Chart.js) -->
+        <div class="lg:col-span-6">
+            <div class="bg-white rounded-xl shadow-md p-6 h-full flex flex-col">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Most Common "Accidental" Open Ports</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    Breakdown of unexpected ports detected during the last quarter. High-frequency detection suggests systemic misconfigurations in deployment scripts.
+                </p>
+                <div class="flex-grow flex items-center justify-center">
+                    <!-- Chart Container with strict sizing -->
+                    <div class="chart-container">
+                        <canvas id="portsDonutChart"></canvas>
+                    </div>
+                </div>
+                <div class="mt-4 text-xs text-gray-400 text-center">
+                    *Data simulated for illustrative purposes based on typical SecOps findings.
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 4: Data Visualization - Weekly Trends -->
+        <!-- Goal: Change over Time -->
+        <!-- Chart Type: Line Chart (Chart.js) -->
+        <div class="lg:col-span-6">
+            <div class="bg-white rounded-xl shadow-md p-6 h-full flex flex-col">
+                <h3 class="text-xl font-bold text-gray-800 mb-2">Incident Detection Trend</h3>
+                <p class="text-sm text-gray-500 mb-6">
+                    The number of detected anomalies over a 12-week period. Note the downward trend as the automated feedback loop helps engineering teams fix base images.
+                </p>
+                <div class="flex-grow flex items-center justify-center">
+                    <div class="chart-container">
+                        <canvas id="trendLineChart"></canvas>
+                    </div>
+                </div>
+                 <div class="mt-4 text-xs text-gray-400 text-center">
+                    *The spike in Week 4 correlates with a major infrastructure migration.
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 5: Efficiency Comparison -->
+        <!-- Goal: Compare -->
+        <!-- Chart Type: Bar Chart (Chart.js) -->
+        <div class="lg:col-span-12">
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Manual vs. Automated Monitoring</h3>
+                        <p class="text-gray-600 mb-4">
+                            Before implementing the n8n workflow, security audits were performed manually or via ad-hoc scripts. 
+                            The automation has reduced the "Time to Detect" (TTD) from days to minutes.
+                        </p>
+                        <ul class="space-y-3">
+                            <li class="flex items-center text-sm text-gray-700">
+                                <span class="w-3 h-3 bg-indigo-500 rounded-full mr-2"></span>
+                                <strong>Manual:</strong> High effort, prone to human error, monthly cadence.
+                            </li>
+                            <li class="flex items-center text-sm text-gray-700">
+                                <span class="w-3 h-3 bg-cyan-500 rounded-full mr-2"></span>
+                                <strong>Automated:</strong> Zero marginal effort, consistent, weekly cadence.
+                            </li>
+                        </ul>
+                    </div>
+                    <div>
+                        <div class="chart-container" style="height: 300px;">
+                            <canvas id="efficiencyBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 6: Advanced Risk Analysis (WebGL) -->
+        <!-- Goal: Relationships (Complex Data) -->
+        <!-- Chart Type: Plotly 3D Scatter (WebGL) - NO SVG -->
+        <div class="lg:col-span-12">
+            <div class="bg-gray-900 rounded-xl shadow-lg p-6 text-white overflow-hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                    <div>
+                        <h3 class="text-xl font-bold text-white mb-1">Asset Risk Correlation (3D Analysis)</h3>
+                        <p class="text-gray-400 text-sm">
+                            Multidimensional analysis of monitored assets. 
+                            <br><strong>X:</strong> Number of Open Ports | <strong>Y:</strong> Vulnerability Score | <strong>Z:</strong> Asset Criticality
+                        </p>
+                    </div>
+                    <div class="bg-white/10 px-3 py-1 rounded text-xs mt-2 md:mt-0">
+                        Interactive WebGL Visualization
+                    </div>
+                </div>
+                <!-- Plotly Container -->
+                <div id="plotly3dDiv" class="plotly-container"></div>
+                <p class="text-xs text-center text-gray-500 mt-2">Rotate and zoom to explore the data clusters.</p>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-300 py-12 border-t border-gray-700">
+        <div class="container mx-auto px-4 text-center">
+            <h2 class="text-2xl font-bold text-white mb-4">Secure Your Stack with n8n</h2>
+            <p class="max-w-xl mx-auto mb-8">
+                Don't wait for a breach report to find your open ports. Implement the "Weekly Shodan Query" workflow today and turn security into a background process.
+            </p>
+            <div class="text-sm opacity-50">
+                &copy; 2023 SecOps Automation Guide. Generated for Educational Purposes.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts for Visualizations -->
+    <script>
+        // ---------------------------------------------------------
+        // UTILITY: Label Wrapping Helper (16 char limit)
+        // ---------------------------------------------------------
+        function splitLabel(str, maxLen = 16) {
+            if (str.length <= maxLen) return str;
+            const words = str.split(' ');
+            const lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                if ((currentLine + " " + words[i]).length <= maxLen) {
+                    currentLine += " " + words[i];
+                } else {
+                    lines.push(currentLine);
+                    currentLine = words[i];
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // ---------------------------------------------------------
+        // CHART 1: Common Ports Donut Chart (Chart.js)
+        // ---------------------------------------------------------
+        const ctxDonut = document.getElementById('portsDonutChart').getContext('2d');
+        
+        // Raw labels
+        const rawDonutLabels = [
+            'Port 80 (Legacy HTTP)', 
+            'Port 22 (SSH Admin Access)', 
+            'Port 3389 (Remote Desktop)', 
+            'Port 8080 (Dev Servers)', 
+            'Port 21 (FTP Data)'
+        ];
+
+        // Process labels
+        const processedDonutLabels = rawDonutLabels.map(l => splitLabel(l));
+
+        new Chart(ctxDonut, {
+            type: 'doughnut',
+            data: {
+                labels: processedDonutLabels,
+                datasets: [{
+                    data: [35, 25, 20, 15, 5],
+                    backgroundColor: [
+                        '#4F46E5', // Indigo 600
+                        '#9333EA', // Purple 600
+                        '#06B6D4', // Cyan 500
+                        '#F472B6', // Pink 400
+                        '#A78BFA'  // Violet 400
+                    ],
+                    borderWidth: 0,
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { family: "'Inter', sans-serif", size: 12 },
+                            usePointStyle: true,
+                            boxWidth: 8
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) {
+                                    return label.join(' ');
+                                } else {
+                                    return label;
+                                }
+                            }
+                        },
+                        backgroundColor: 'rgba(31, 41, 55, 0.9)',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 2: Trends Line Chart (Chart.js)
+        // ---------------------------------------------------------
+        const ctxLine = document.getElementById('trendLineChart').getContext('2d');
+        
+        const trendLabels = ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'Week 5', 'Week 6', 'Week 7', 'Week 8'];
+
+        new Chart(ctxLine, {
+            type: 'line',
+            data: {
+                labels: trendLabels,
+                datasets: [
+                    {
+                        label: 'Total Scans',
+                        data: [50, 52, 55, 60, 62, 65, 65, 68],
+                        borderColor: '#E5E7EB', // Gray 200
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.4,
+                        fill: false
+                    },
+                    {
+                        label: 'Accidents Detected',
+                        data: [12, 10, 8, 15, 7, 4, 3, 1], // Spike at week 4
+                        borderColor: '#F43F5E', // Rose 500
+                        backgroundColor: 'rgba(244, 63, 94, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#F43F5E',
+                        pointRadius: 4,
+                        tension: 0.3,
+                        fill: true
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        align: 'end',
+                        labels: { usePointStyle: true, boxWidth: 6 }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) return label.join(' ');
+                                return label;
+                            }
+                        },
+                        mode: 'index',
+                        intersect: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: true, color: '#F3F4F6' },
+                        ticks: { font: { size: 10 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10 } }
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 3: Efficiency Bar Chart (Chart.js)
+        // ---------------------------------------------------------
+        const ctxBar = document.getElementById('efficiencyBarChart').getContext('2d');
+
+        const barRawLabels = ['Discovery Time (Mins)', 'Resolution Time (Hours)', 'False Positive Rate (%)'];
+        const barLabels = barRawLabels.map(l => splitLabel(l));
+
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: {
+                labels: barLabels,
+                datasets: [
+                    {
+                        label: 'Manual Process',
+                        data: [120, 48, 15],
+                        backgroundColor: '#D1D5DB', // Gray 300
+                        borderRadius: 4
+                    },
+                    {
+                        label: 'Automated Workflow',
+                        data: [2, 4, 2],
+                        backgroundColor: '#06B6D4', // Cyan 500
+                        borderRadius: 4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                if (Array.isArray(label)) return label.join(' ');
+                                return label;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { display: true, borderDash: [2, 2] }
+                    },
+                    x: {
+                        grid: { display: false }
+                    }
+                }
+            }
+        });
+
+        // ---------------------------------------------------------
+        // CHART 4: Risk Analysis 3D Scatter (Plotly.js WebGL)
+        // ---------------------------------------------------------
+        // Data simulation
+        const count = 50;
+        const xData = Array.from({length: count}, () => Math.floor(Math.random() * 20)); // Open Ports
+        const yData = Array.from({length: count}, () => Math.floor(Math.random() * 10)); // Vuln Score
+        const zData = Array.from({length: count}, () => Math.floor(Math.random() * 100)); // Asset Criticality
+        const colorData = zData.map(v => v > 80 ? '#F43F5E' : (v > 50 ? '#9333EA' : '#06B6D4')); // Color based on criticality
+
+        const trace1 = {
+            x: xData,
+            y: yData,
+            z: zData,
+            mode: 'markers',
+            marker: {
+                size: 8,
+                color: colorData,
+                opacity: 0.8,
+                line: {
+                    color: 'white',
+                    width: 0.5
+                }
+            },
+            type: 'scatter3d' // Uses WebGL
+        };
+
+        const layout3d = {
+            margin: { l: 0, r: 0, b: 0, t: 0 },
+            paper_bgcolor: 'rgba(0,0,0,0)',
+            plot_bgcolor: 'rgba(0,0,0,0)',
+            scene: {
+                xaxis: { title: 'Open Ports', color: 'white', gridcolor: '#374151' },
+                yaxis: { title: 'Vuln Score', color: 'white', gridcolor: '#374151' },
+                zaxis: { title: 'Criticality', color: 'white', gridcolor: '#374151' },
+                bgcolor: 'rgba(0,0,0,0)' // Transparent background
+            },
+            showlegend: false
+        };
+
+        const config3d = {
+            responsive: true,
+            displayModeBar: false // Keep it clean
+        };
+
+        Plotly.newPlot('plotly3dDiv', [trace1], layout3d, config3d);
+
+    </script>
+</body>
+</html>
